@@ -1,22 +1,29 @@
 package com.tagogayo.tagogayo_user_app;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Dialog;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Message;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.DownloadListener;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -25,40 +32,21 @@ import android.widget.Toast;
 import java.net.URISyntaxException;
 
 public class MainActivity extends AppCompatActivity {
-    WebView contentWebView;
+    WebView mWebView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 웹뷰 시작
-        contentWebView = (WebView) findViewById(R.id.webView);
-        contentWebView.setWebViewClient(new BWebviewClient());
-        WebSettings webSettings = contentWebView.getSettings();
-
-        webSettings.setSaveFormData(true);      // 폼 입력 값 저장 여부
-        webSettings.setSupportZoom(true);       // 줌 사용 여부 : HTML Meta태그에 적어놓은 설정이 우선 됨
-        webSettings.setBuiltInZoomControls(true); // 줌 사용 여부와 같이 사용해야 하는 설정(안드로이드 내장 기능)
-        webSettings.setDisplayZoomControls(false); // 줌 사용 시 하단에 뜨는 +, - 아이콘 보여주기 여부
-        webSettings.setJavaScriptEnabled(true); // 자바스크립트 사용 여부
-        webSettings.setDomStorageEnabled(true); // 웹뷰내의 localStorage 사용 여부
-        webSettings.setGeolocationEnabled(true); // 웹뷰내의 위치 정보 사용 여부
-        //webSettings.setJavaScriptCanOpenWindowsAutomatically(true); // 웹뷰내의 JS의 window.open()을 허용할 것인지에 대한 여부
-        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
-        webSettings.setSupportMultipleWindows(true);
-
-        if (Build.VERSION.SDK_INT >= 16) {
-            webSettings.setAllowFileAccessFromFileURLs(true);
-            webSettings.setAllowUniversalAccessFromFileURLs(true);
-        }
-
-        if (Build.VERSION.SDK_INT >= 21) {
-            webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW); // HTTPS HTTP의 연동, 서로 호출 가능하도록
-        }
-
-
-        contentWebView.loadUrl("https://tagogayo.kr/");
+        this.mWebView = findViewById(R.id.webView);
+        WebSettings settings = mWebView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        settings.setSupportMultipleWindows(true);
+        this.mWebView.setWebChromeClient(new MyWebChromeClient());
+        this.mWebView.setWebViewClient(new MyWebViewClient(getApplicationContext()));
+        this.mWebView.loadUrl("https://tagogayo.kr/");
 
 
     }
@@ -69,20 +57,24 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         long curTime = System.currentTimeMillis();
         long gapTime = curTime - backBtnTime;
-        if (contentWebView.canGoBack()) {
-            contentWebView.goBack();
+        if (mWebView.canGoBack()) {
+            mWebView.goBack();
         } else if (0 <= gapTime && 2000 >= gapTime) {
             super.onBackPressed();
         } else {
             backBtnTime = curTime;
             Toast.makeText(this, "한번 더 누르면 종료됩니다.", Toast.LENGTH_SHORT).show();
         }
-
-
     }
 
-    private class BWebviewClient extends WebViewClient {
 
+    public class MyWebViewClient extends WebViewClient {
+        private String TAG = "MyWebViewClient";
+        private Context mApplicationContext = null;
+
+        public MyWebViewClient(Context _applicationContext) {
+            mApplicationContext = _applicationContext;
+        }
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -96,24 +88,6 @@ public class MainActivity extends AppCompatActivity {
                 return start(intent, view.getContext());
             }
             return url.contains("https://bootpaymark");
-        }
-
-        public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
-            WebView newWebView = new WebView(MainActivity.this);
-            WebSettings webSettings = newWebView.getSettings();
-            webSettings.setJavaScriptEnabled(true);
-            final Dialog dialog = new Dialog(MainActivity.this);
-            dialog.setContentView(newWebView);
-            dialog.show();
-            newWebView.setWebChromeClient(new WebChromeClient() {
-                @Override
-                public void onCloseWindow(WebView window) {
-                    dialog.dismiss();
-                }
-            });
-            ((WebView.WebViewTransport) resultMsg.obj).setWebView(newWebView);
-            resultMsg.sendToTarget();
-            return true;
         }
 
         private Intent parse(String url) {
@@ -156,6 +130,140 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            super.onPageStarted(view, url, favicon);
+        }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+        }
+
+        @Override
+        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+            super.onReceivedError(view, request, error);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                onReceivedError(error.getErrorCode(), String.valueOf(error.getDescription()));
+            }
+        }
+
+        @Override
+        public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+            super.onReceivedError(view, errorCode, description, failingUrl);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                onReceivedError(errorCode, description);
+            }
+        }
+
+        private void onReceivedError(int errorCode, String description) {
+            switch (errorCode) {
+                case WebViewClient.ERROR_TIMEOUT: //연결 시간 초과
+                case WebViewClient.ERROR_CONNECT: //서버로 연결 실패
+                case WebViewClient.ERROR_UNKNOWN: // 일반 오류
+                case WebViewClient.ERROR_FILE_NOT_FOUND: //404
+                case WebViewClient.ERROR_HOST_LOOKUP:
+                case WebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME:
+                case WebViewClient.ERROR_AUTHENTICATION:
+                case WebViewClient.ERROR_PROXY_AUTHENTICATION:
+                case WebViewClient.ERROR_IO:
+                case WebViewClient.ERROR_REDIRECT_LOOP:
+                case WebViewClient.ERROR_UNSUPPORTED_SCHEME:
+                case WebViewClient.ERROR_FAILED_SSL_HANDSHAKE:
+                case WebViewClient.ERROR_BAD_URL:
+                case WebViewClient.ERROR_FILE:
+                case WebViewClient.ERROR_TOO_MANY_REQUESTS:
+                case WebViewClient.ERROR_UNSAFE_RESOURCE:
+
+                    Log.e(TAG, "WebViewClient,onReceivedError(" + errorCode + ") 에러 발생 ");
+                    break;
+            }
+        }
 
     }
+
+
+    public class MyWebChromeClient extends WebChromeClient {
+        private final String TAG = "MyWebChromeClient";
+
+        @Override
+        public void onProgressChanged(WebView view, int newProgress) {
+            super.onProgressChanged(view, newProgress);
+            Log.i(TAG, "onProgressChanged(view:" + view.toString() + ", newProgress:" + newProgress + ")");
+        }
+
+        @Override
+        public boolean onCreateWindow(final WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+            final WebView newWebView = new WebView(view.getContext());
+            WebSettings webSettings = newWebView.getSettings();
+            WebSettings settings = newWebView.getSettings();
+            settings.setJavaScriptEnabled(true);
+            settings.setJavaScriptCanOpenWindowsAutomatically(true);
+            settings.setSupportMultipleWindows(true); //final Dialog dialog = new Dialog(view.getContext(),R.style.Theme_DialogFullScreen);
+            final Dialog dialog = new Dialog(view.getContext());
+            dialog.setContentView(newWebView);
+            dialog.show();
+            dialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
+                @Override
+                public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                    if (keyCode == KeyEvent.KEYCODE_BACK) { //Log.toastMakeTextShow(view.getContext(), "TAG", "KEYCODE_BACK");
+                        if (newWebView.canGoBack()) {
+                            newWebView.goBack();
+                        } else {
+                            dialog.dismiss();
+                        }
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            });
+            newWebView.setWebViewClient(new MyWebViewClient(view.getContext()));
+            newWebView.setWebChromeClient(new MyWebChromeClient() {
+                @Override
+                public void onCloseWindow(WebView window) {
+                    dialog.dismiss();
+                }
+            });
+            WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+            transport.setWebView(newWebView);
+            resultMsg.sendToTarget();
+            return true;
+        }
+
+        @Override
+        public void onCloseWindow(WebView window) {
+            Log.i(getClass().getName(), "onCloseWindow");
+            window.setVisibility(View.GONE);
+            window.destroy(); //mWebViewSub=null;
+            super.onCloseWindow(window);
+        }
+
+        @Override
+        public boolean onJsAlert(WebView view, String url, String message, final JsResult result) {
+            Log.i(getClass().getName(), "onJsAlert() url:" + url + ", message:" + message); //return super.onJsAlert(view, url, message, result);
+            new AlertDialog.Builder(view.getContext()).setTitle("").setMessage(message).setPositiveButton(android.R.string.ok, new AlertDialog.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    result.confirm();
+                }
+            }).setCancelable(false).create().show();
+            return true;
+        }
+
+        @Override
+        public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
+            Log.i(getClass().getName(), "onJsConfirm() url:" + url + ", message" + message); //return super.onJsConfirm(view, url, message, result);
+            new AlertDialog.Builder(view.getContext()).setTitle("").setMessage(message).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    result.confirm();
+                }
+            }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    result.cancel();
+                }
+            }).create().show();
+            return true;
+        }
+    }
+
 }
