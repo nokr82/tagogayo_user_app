@@ -84,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
                     return start(intent, view.getContext());
                 else
                     gotoMarket(intent, view.getContext());
+            }else if(url.startsWith("tel:")){
+                Intent dial = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                //현재의 activity 에 대하여 startActivity 호출
+                startActivity(dial);
+                return true;
             } else if (isMarket(url)) {
                 return start(intent, view.getContext());
             }
