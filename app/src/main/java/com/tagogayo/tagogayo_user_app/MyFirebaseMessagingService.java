@@ -26,19 +26,18 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * remoteMessage 메세지 안애 getData와 getNotification이 있습니다.
      * 이부분은 차후 테스트 날릴때 설명 드리겠습니다.
      **/
-    private void sendNotification(RemoteMessage remoteMessage,int type) {
+    private void sendNotification(RemoteMessage remoteMessage, int type) {
 
         String link = "";
         String title = "";
         String message = "";
-        if (type == 1){
-             title = remoteMessage.getNotification().getTitle();
-             message = remoteMessage.getNotification().getBody();
-        }else {
-             title = remoteMessage.getData().get("title");
-             message = remoteMessage.getData().get("message");
+        if (type == 1) {
+            title = remoteMessage.getNotification().getTitle();
+            message = remoteMessage.getNotification().getBody();
+        } else {
+            title = remoteMessage.getData().get("title");
+            message = remoteMessage.getData().get("message");
         }
-
 
 
         String channel = "tagogayo_user";
@@ -46,7 +45,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         link = remoteMessage.getData().get("link");
 
-        Bitmap img = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_background);
+        Bitmap img = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
 
         //String title =
         Intent intent = new Intent(this, com.tagogayo.tagogayo_user_app.MainActivity.class);
@@ -82,7 +81,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(getApplicationContext(), channel)
                             .setPriority(NotificationCompat.PRIORITY_MAX)
-                            .setSmallIcon(R.drawable.ic_launcher_background)
+                            .setSmallIcon(R.mipmap.ic_launcher)
                             .setContentTitle(title)
                             .setContentText(message)
                             .setLargeIcon(img)
@@ -101,12 +100,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             notificationManager.notify(9999, notificationBuilder.build());
 
 
-
         } else {
             NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(getApplicationContext(), channel)
                             .setPriority(NotificationCompat.PRIORITY_MAX)
-                            .setSmallIcon(R.drawable.ic_launcher_background)
+                            .setSmallIcon(R.mipmap.ic_launcher)
                             .setContentTitle(title)
                             .setContentText(message)
                             .setLargeIcon(img)
@@ -128,6 +126,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     /**
      * 메시지 수신받는 메소드
+     *
      * @param msg
      */
     @Override
@@ -135,9 +134,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Log.i("### msg : ", msg.toString());
 
         if (msg.getNotification() != null) { //포그라운드
-            sendNotification(msg,1);
-        }else if (msg.getData().size() > 0) { //백그라운드
-            sendNotification(msg,2);
+            sendNotification(msg, 1);
+        } else if (msg.getData().size() > 0) { //백그라운드
+            sendNotification(msg, 2);
         }
 
 
