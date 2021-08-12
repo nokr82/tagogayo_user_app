@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setSupportMultipleWindows(true);
         this.mWebView.setWebChromeClient(new MyWebChromeClient());
         this.mWebView.setWebViewClient(new MyWebViewClient(getApplicationContext()));
-        this.mWebView.loadUrl("https://tagogayo.kr/");
+
 
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(new OnCompleteListener<String>() {
@@ -66,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
                         // Log and toast
                         String msg = token;
                         System.out.println("토큰:"+msg);
-                        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                        mWebView.loadUrl("https://tagogayo.kr?push_token="+msg);
+//                        Toast.makeText(MainActivity.this, "https://tagogayo.kr?push_token="+msg, Toast.LENGTH_SHORT).show();
                     }
                 });
 

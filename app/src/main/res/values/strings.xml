@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">tagogayo_user_app</string>
+    <string name="tagogayo_user_ch" translatable="false">tagogayo_user</string>
 </resources>
