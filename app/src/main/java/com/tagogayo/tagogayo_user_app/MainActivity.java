@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
                         // Log and toast
                         String msg = token;
                         System.out.println("토큰:"+msg);
-                        mWebView.loadUrl("https://tagogayo.kr?push_token="+msg);
+                        mWebView.loadUrl("https://tagogayo.co.kr?push_token="+msg);
 //                        Toast.makeText(MainActivity.this, "https://tagogayo.kr?push_token="+msg, Toast.LENGTH_SHORT).show();
                     }
                 });
