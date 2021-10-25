@@ -102,7 +102,32 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             Intent intent = parse(url);
-            if (isIntent(url)) {
+            if (url != null && url.startsWith("intent://")) {
+                try {
+                    Intent intent3 = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                    Intent existPackage = getPackageManager().getLaunchIntentForPackage(intent3.getPackage());
+                    if (existPackage != null) {
+                        startActivity(intent3);
+                    } else {
+                        Intent marketIntent = new Intent(Intent.ACTION_VIEW);
+                        marketIntent.setData(Uri.parse("market://details?id="+intent.getPackage()));
+                        startActivity(marketIntent);
+                    }
+                    return true;
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else if (url != null && url.startsWith("market://")) {
+                try {
+                    Intent intent3 = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                    if (intent3 != null) {
+                        startActivity(intent3);
+                    }
+                    return true;
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+            }else if (isIntent(url)) {
                 if (isExistInfo(intent, view.getContext()) || isExistPackage(intent, view.getContext()))
                     return start(intent, view.getContext());
                 else
