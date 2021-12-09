@@ -319,5 +319,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    protected void onPause() {
+        super.onPause();
+        try {
+            Class.forName("android.webkit.WebView")
+                    .getMethod("onPause", (Class[]) null)
+                    .invoke(mWebView, (Object[]) null);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+    protected void onResume() {
+        super.onResume();
+        try {
+            Class.forName("android.webkit.WebView")
+                    .getMethod("onResume", (Class[]) null)
+                    .invoke(mWebView, (Object[]) null);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 }
