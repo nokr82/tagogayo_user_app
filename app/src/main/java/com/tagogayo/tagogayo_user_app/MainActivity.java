@@ -4,10 +4,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -37,6 +39,9 @@ import static android.content.ContentValues.TAG;
 public class MainActivity extends AppCompatActivity {
     WebView mWebView;
 
+   String url = "https://tagogayo.kr?push_token=";
+   String first_yn = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +54,23 @@ public class MainActivity extends AppCompatActivity {
         settings.setSupportMultipleWindows(true);
         this.mWebView.setWebChromeClient(new MyWebChromeClient());
         this.mWebView.setWebViewClient(new MyWebViewClient(getApplicationContext()));
+
+
+        //        최초 실행 여부를 판단 ->>>
+        SharedPreferences pref = getSharedPreferences("checkFirst", Activity.MODE_PRIVATE);
+        boolean checkFirst = pref.getBoolean("checkFirst", false);
+        System.out.println(checkFirst+"wqeqweq");
+        if(checkFirst==false){
+            // 앱 최초 실행시 하고 싶은 작업
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putBoolean("checkFirst",true);
+            editor.commit();
+            first_yn = "Y";
+
+        }else{
+            first_yn = "N";
+            // 최초 실행이 아닐때 진행할 작업
+        }
 
 
         FirebaseMessaging.getInstance().getToken()
@@ -65,11 +87,15 @@ public class MainActivity extends AppCompatActivity {
 
                         // Log and toast
                         String msg = token;
-                        System.out.println("토큰:"+msg);
-                        mWebView.loadUrl("https://tagogayo.co.kr?push_token="+msg);
+                        url = url +msg;
+                        mWebView.loadUrl(url+msg+"&first="+first_yn);
+                        System.out.println("토큰:"+url+msg+"&first="+first_yn);
+
 //                        Toast.makeText(MainActivity.this, "https://tagogayo.kr?push_token="+msg, Toast.LENGTH_SHORT).show();
                     }
                 });
+
+
 
 
     }
